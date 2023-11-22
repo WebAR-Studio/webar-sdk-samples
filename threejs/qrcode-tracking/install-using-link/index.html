@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, minimal-ui, viewport-fit=cover, minimum-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Web AR Studio SDK - ThreeJS. QR Code Tracking - Hello world</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/normalize.css@8.0.1/normalize.css"
+    />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <noscript>Your browser does not support JavaScript!</noscript>
+    <div class="App"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+          "three/examples/jsm/": "https://unpkg.com/three@0.158.0/examples/jsm/",
+          "@web-ar-studio/webar-engine-sdk": "https://unpkg.com/@web-ar-studio/webar-engine-sdk@1.0.0/dist/index.mjs"
+        }
+      }
+    </script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "was-qrcode-tracking-threejs",
+  "version": "1.0.0",
+  "description": "Here's an example of an qrcode tracking AR project using the Three.js library",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@web-ar-studio/webar-engine-sdk": "^1.0.0",
+    "normalize.css": "^8.0.1",
+    "three": "^0.158.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
