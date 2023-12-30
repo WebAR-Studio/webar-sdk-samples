@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@web-ar-studio/webar-engine-sdk": "^1.0.3",
+    "@web-ar-studio/webar-engine-sdk": "^1.0.4",
     "normalize.css": "^8.0.1",
-    "three": "^0.158.0"
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"
