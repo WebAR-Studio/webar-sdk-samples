@@ -268,21 +268,27 @@ const errorHandler = (error) => {
   switch (error.name) {
     case HTML_ERROR:
       // Handle HTML-related errors
+      console.error(error);
       break;
     case DEVICE_ERROR:
       // Handle device-related errors
+      console.error(error);
       break;
     case VIDEO_ERROR:
       // Handle video-related errors
+      console.error(error);
       break;
     case GL_ERROR:
       // Handle WebGL-related errors
+      console.error(error);
       break;
     case WORKER_ERROR:
       // Handle worker-related errors
+      console.error(error);
       break;
     case EVENT_ERROR:
       // Handle event-related errors
+      console.error(error);
       break;
   }
 };
