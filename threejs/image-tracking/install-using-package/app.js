@@ -6,6 +6,7 @@ import {
   AnimationMixer,
   LoopRepeat,
   EquirectangularReflectionMapping,
+  Quaternion
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
@@ -16,7 +17,7 @@ import WAS, {
   EVENT_ERROR,
   EVENT_FRAME,
   EVENT_LOST,
-  EVENT_ORIENTATION,
+  EVENT_SCREEN_ORIENTATION,
   EVENT_POSE,
   EVENT_PROCESS,
   EVENT_RESIZE,
@@ -152,10 +153,13 @@ was
               data.positionVector.y,
               data.positionVector.z,
             );
-            model.rotation.set(
-              data.rotationVector.x,
-              data.rotationVector.y,
-              data.rotationVector.z,
+            model.rotation.setFromQuaternion(
+              new Quaternion(
+                data.rotationQuaternion.x,
+                data.rotationQuaternion.y,
+                data.rotationQuaternion.z,
+                data.rotationQuaternion.w
+              )
             );
           }
         }
@@ -187,10 +191,13 @@ was
               data.positionVector.y,
               data.positionVector.z,
             );
-            model.rotation.set(
-              data.rotationVector.x,
-              data.rotationVector.y,
-              data.rotationVector.z,
+            model.rotation.setFromQuaternion(
+              new Quaternion(
+                data.rotationQuaternion.x,
+                data.rotationQuaternion.y,
+                data.rotationQuaternion.z,
+                data.rotationQuaternion.w
+              )
             );
           }
         }
@@ -228,7 +235,7 @@ was
 
     // Handling orientation event
     was
-      .on(EVENT_ORIENTATION, (isVertical) => {})
+      .on(EVENT_SCREEN_ORIENTATION, (angle) => {})
       .catch((error) => {
         errorHandler(error);
       });
