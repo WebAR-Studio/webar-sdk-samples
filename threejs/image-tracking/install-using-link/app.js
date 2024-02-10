@@ -274,10 +274,12 @@ const errorHandler = (error) => {
       break;
     case DEVICE_ERROR:
       // Handle device-related errors
+      window.alert("Device not found. Please open Devtools, select any device, and reload the page for local testing"); //You can remove this handling. It is solely for the convenience of understanding errors on the first run
       console.error(error);
       break;
     case VIDEO_ERROR:
       // Handle video-related errors
+      window.alert("Camera access denied. Please allow camera access in the page settings and reload the page for local testing"); //You can remove this handling. It is solely for the convenience of understanding errors on the first run
       console.error(error);
       break;
     case GL_ERROR:
