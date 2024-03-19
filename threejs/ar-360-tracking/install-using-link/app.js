@@ -1,22 +1,21 @@
-import 'normalize.css';
 import {
   WebGLRenderer,
   Scene,
   PerspectiveCamera,
-  AnimationMixer,
-  LoopRepeat,
   EquirectangularReflectionMapping,
-  Quaternion
+  Euler,
+  Quaternion,
+  Vector3
 } from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import WAS, {
-  ANCHOR_TYPE_CENTER,
   DEVICE_ERROR,
   EVENT_DETECTED,
   EVENT_ERROR,
   EVENT_FRAME,
   EVENT_LOST,
+  EVENT_DEVICE_ORIENTATION,
   EVENT_SCREEN_ORIENTATION,
   EVENT_POSE,
   EVENT_PROCESS,
@@ -24,8 +23,7 @@ import WAS, {
   EVENT_VISIBILITY,
   GL_ERROR,
   HTML_ERROR,
-  PROJECT_MODE_QR,
-  TRIGGER_MODE_QR,
+  PROJECT_MODE_SLAM_3DOF,
   VIDEO_ERROR,
   WORKER_ERROR,
 } from '@web-ar-studio/webar-engine-sdk';
@@ -35,16 +33,16 @@ const CAMERA_FOV = 45;
 const CAMERA_NEAR = 1;
 const CAMERA_FAR = 100000;
 
-// Getting reference to the container element
+// Getting reference to the container and button element
 const container = document.querySelector('.App');
+const button = document.querySelector('.Button');
 
 // Defining paths for the trigger, 3D model, and HDR environment map to create an augmented reality project example with a simple 3D model
-const triggerSource = 'trigger';
-const gltfSource = new URL('./assets/skyscraper.glb', import.meta.url).href;
+const gltfSource = new URL('./assets/controller.glb', import.meta.url).href;
 const hdrSource = new URL('./assets/environment.hdr', import.meta.url).href;
 
 // Checking if the container element exists
-if (!container) {
+if (!container || !button) {
   throw new Error('Element not found!');
 }
 
@@ -52,22 +50,39 @@ if (!container) {
 const was = new WAS();
 
 // Configuring Web-AR.Studio SDK with required settings
+// Each AR project has 2 keys: one for local testing and the other - public. Use the public key for the final build
+// You can create your own API KEY on the web-ar.studio platform or you can write our team directly https://t.me/was_team
+// You can use this Test Key for demo use only in local testing: 52f80541de1715ba47f43522d648d0800c6e514d8b5e91b9b6e13ef9e1348cb8
 const configData = {
-  apiKey: import.meta.env.VITE_API_KEY, //You can modify your API key in the .env file or specify it explicitly here. P.S. you can find more info in .env file
-  mode: PROJECT_MODE_QR,
+  apiKey: '52f80541de1715ba47f43522d648d0800c6e514d8b5e91b9b6e13ef9e1348cb8',
+  mode: PROJECT_MODE_SLAM_3DOF,
   container: container,
-  fov: CAMERA_FOV,
-  triggers: [{ id: 1, mode: TRIGGER_MODE_QR, source: triggerSource }],
-  isMultiTracking: true,
-  anchor: ANCHOR_TYPE_CENTER,
 };
+
+const convertingScreenAngle = (angle) => {
+  if (angle === undefined) {
+    angle =
+      typeof screen.orientation !== 'undefined'
+        ? screen.orientation.angle
+        : window.orientation;
+  }
+
+  return angle === 270 ? -90 : angle;
+}
+
+const degreesToRadians = (degrees) => {
+  return (degrees * Math.PI) / 180;
+}
+
+let currentAngle = convertingScreenAngle();
 
 // Initializing Web-AR.Studio SDK
 was
   .init(configData)
   .then(({ canvas, context, viewportSizes }) => {
-    let model = null;
-    let animationMixer = null;
+    const EPS = 0.000001;
+    const models = [];
+    const countModels = 4;
 
     // Creating a WebGLRenderer
     const renderer = new WebGLRenderer({
@@ -120,26 +135,40 @@ was
       );
     });
 
+
     // Loading 3D model using GLTFLoader
     const gltfPromise = new Promise((resolve, reject) => {
       const gltfLoader = new GLTFLoader();
       gltfLoader.load(
         gltfSource,
         (gltf) => {
-          model = gltf.scene;
-          model.visible = false;
-          scene.add(gltf.scene);
+          for (let i = 0; i < countModels; i++) {
+            const model = gltf.scene.clone();
+            models.push(model);
 
-          // Setting up animations if available
-          if (!gltf.animations.length) {
-            return resolve();
-          }
+            model.visible = false;
 
-          animationMixer = new AnimationMixer(model);
-          for (const animationClip of gltf.animations) {
-            const action = animationMixer.clipAction(animationClip);
-            action.setLoop(LoopRepeat, Infinity);
-            action.play();
+            switch (i) {
+              case 0:
+                model.position.set(0, 0, -5);
+                model.rotation.set(0, 0, 0);
+                break;
+              case 1:
+                model.position.set(5, 0, 0);
+                model.rotation.set(0, -Math.PI / 2, 0);
+                break;
+              case 2:
+                model.position.set(-5, 0, 0);
+                model.rotation.set(0, Math.PI / 2, 0);
+                break;
+              case 3:
+                model.position.set(0, 0, 5);
+                model.rotation.set(0, Math.PI, 0);
+                break;
+
+            }
+
+            scene.add(model);
           }
           resolve();
         },
@@ -152,64 +181,21 @@ was
 
     Promise.all([hdrPromise, gltfPromise]).then(() => {
       was
-        .on(EVENT_DETECTED, (detectedData) => {
-          for (const data of detectedData) {
-            if (model) {
-              model.visible = true;
-              model.position.set(
-                data.positionVector.x,
-                data.positionVector.y,
-                data.positionVector.z,
-              );
-              model.rotation.setFromQuaternion(
-                new Quaternion(
-                  data.rotationQuaternion.x,
-                  data.rotationQuaternion.y,
-                  data.rotationQuaternion.z,
-                  data.rotationQuaternion.w
-                )
-              );
-            }
-          }
-        })
+        .on(EVENT_DETECTED, (detectedData) => {})
         .catch((error) => {
           errorHandler(error);
         });
 
       // Handling model loss event
       was
-        .on(EVENT_LOST, (lostData) => {
-          for (const data of lostData) {
-            if (model) {
-              model.visible = false;
-            }
-          }
-        })
+        .on(EVENT_LOST, (lostData) => {})
         .catch((error) => {
           errorHandler(error);
         });
 
       // Handling pose update event
       was
-        .on(EVENT_POSE, (poseData) => {
-          for (const data of poseData) {
-            if (model) {
-              model.position.set(
-                data.positionVector.x,
-                data.positionVector.y,
-                data.positionVector.z,
-              );
-              model.rotation.setFromQuaternion(
-                new Quaternion(
-                  data.rotationQuaternion.x,
-                  data.rotationQuaternion.y,
-                  data.rotationQuaternion.z,
-                  data.rotationQuaternion.w
-                )
-              );
-            }
-          }
-        })
+        .on(EVENT_POSE, (poseData) => {})
         .catch((error) => {
           errorHandler(error);
         });
@@ -243,7 +229,9 @@ was
 
       // Handling orientation event
       was
-        .on(EVENT_SCREEN_ORIENTATION, (angle) => {})
+        .on(EVENT_SCREEN_ORIENTATION, (angle) => {
+          currentAngle = convertingScreenAngle(angle);
+        })
         .catch((error) => {
           errorHandler(error);
         });
@@ -258,21 +246,59 @@ was
       // Handling frame update event
       was
         .on(EVENT_FRAME, (deltaTime) => {
-          if (animationMixer) {
-            animationMixer.update(deltaTime / 1000);
-          }
           renderer.render(scene, camera);
         })
         .catch((error) => {
           errorHandler(error);
         });
+
+      button.addEventListener('click', () => {
+        button.classList.add('Button_hide');
+
+        // Handling orientation event
+        was
+          .on(EVENT_DEVICE_ORIENTATION, (event) => {
+            for (const model of models) {
+              model.visible = true;
+            }
+
+            const alpha =
+              event.alpha !== null ? degreesToRadians(event.alpha) : 0;
+            const beta =
+              event.beta !== null ? degreesToRadians(event.beta) : 0;
+            const gamma =
+              event.gamma !== null ? degreesToRadians(event.gamma) : 0;
+
+            const euler = new Euler();
+            const q0 = new Quaternion();
+            const q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+            const zee = new Vector3(0, 0, 1);
+
+
+            euler.set(beta, alpha, -gamma, 'YXZ');
+            camera.quaternion.setFromEuler(euler);
+            camera.quaternion.multiply(q1);
+            camera.quaternion.multiply(
+              q0.setFromAxisAngle(zee, -degreesToRadians(currentAngle))
+            );
+
+            const lastQuaternion = new Quaternion();
+            const quaternionDot = 8 * (1 - lastQuaternion.dot(camera.quaternion));
+            if (quaternionDot > EPS) {
+              lastQuaternion.copy(camera.quaternion);
+            }
+          })
+          .catch((error) => {
+            errorHandler(error);
+          });
+      }, false);
     })
       .catch((error) => {
         errorHandler(error);
       });
-  }).catch((error) => {
-  errorHandler(error);
-})
+    }).catch((error) => {
+      errorHandler(error);
+    })
 
 // Function to handle errors
 const errorHandler = (error) => {
@@ -307,3 +333,4 @@ const errorHandler = (error) => {
       console.error(error);
   }
 };
+

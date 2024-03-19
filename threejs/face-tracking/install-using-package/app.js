@@ -8,10 +8,10 @@ import {
   EquirectangularReflectionMapping,
   Quaternion
 } from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import WAS, {
-  ANCHOR_TYPE_CENTER,
+  ANCHOR_TYPE_NOSE_BRIDGE,
   DEVICE_ERROR,
   EVENT_DETECTED,
   EVENT_ERROR,
@@ -24,8 +24,8 @@ import WAS, {
   EVENT_VISIBILITY,
   GL_ERROR,
   HTML_ERROR,
-  PROJECT_MODE_QR,
-  TRIGGER_MODE_QR,
+  PROJECT_MODE_FACE,
+  TRIGGER_MODE_FACE,
   VIDEO_ERROR,
   WORKER_ERROR,
 } from '@web-ar-studio/webar-engine-sdk';
@@ -39,8 +39,7 @@ const CAMERA_FAR = 100000;
 const container = document.querySelector('.App');
 
 // Defining paths for the trigger, 3D model, and HDR environment map to create an augmented reality project example with a simple 3D model
-const triggerSource = 'trigger';
-const gltfSource = new URL('./assets/skyscraper.glb', import.meta.url).href;
+const gltfSource = new URL('./assets/sunglasses.glb', import.meta.url).href;
 const hdrSource = new URL('./assets/environment.hdr', import.meta.url).href;
 
 // Checking if the container element exists
@@ -54,12 +53,13 @@ const was = new WAS();
 // Configuring Web-AR.Studio SDK with required settings
 const configData = {
   apiKey: import.meta.env.VITE_API_KEY, //You can modify your API key in the .env file or specify it explicitly here. P.S. you can find more info in .env file
-  mode: PROJECT_MODE_QR,
+  mode: PROJECT_MODE_FACE,
   container: container,
   fov: CAMERA_FOV,
-  triggers: [{ id: 1, mode: TRIGGER_MODE_QR, source: triggerSource }],
-  isMultiTracking: true,
-  anchor: ANCHOR_TYPE_CENTER,
+  near: CAMERA_NEAR,
+  far: CAMERA_FAR,
+  triggers: [{ id: 1, mode: TRIGGER_MODE_FACE, source: null }],
+  anchor: ANCHOR_TYPE_NOSE_BRIDGE,
 };
 
 // Initializing Web-AR.Studio SDK

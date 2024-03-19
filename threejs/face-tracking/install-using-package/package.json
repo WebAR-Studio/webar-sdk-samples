@@ -1,7 +1,7 @@
 {
-  "name": "was-qrcode-tracking-threejs",
+  "name": "was-face-tracking-threejs",
   "version": "1.0.1",
-  "description": "Here's an example of an qrcode tracking AR project using the Three.js library",
+  "description": "Here's an example of an face tracking AR project using the Three.js library",
   "type": "module",
   "scripts": {
     "dev": "vite",

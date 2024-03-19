@@ -94,20 +94,6 @@ was
     // Creating a Three.js scene
     const scene = new Scene();
 
-    // Loading HDR environment map
-    const rgbeLoader = new RGBELoader();
-    rgbeLoader.load(
-      hdrSource,
-      (dataTexture, texData) => {
-        dataTexture.mapping = EquirectangularReflectionMapping;
-        scene.environment = dataTexture;
-      },
-      (event) => {},
-      (error) => {
-        console.error(error);
-      },
-    );
-
     // Creating a PerspectiveCamera
     const camera = new PerspectiveCamera(
       CAMERA_FOV,
@@ -116,154 +102,179 @@ was
       CAMERA_FAR,
     );
 
-    // Loading 3D model using GLTFLoader
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load(
-      gltfSource,
-      (gltf) => {
-        model = gltf.scene;
-        model.visible = false;
-        scene.add(gltf.scene);
-
-        // Setting up animations if available
-        if (!gltf.animations.length) {
-          return;
-        }
-
-        animationMixer = new AnimationMixer(model);
-        for (const animationClip of gltf.animations) {
-          const action = animationMixer.clipAction(animationClip);
-          action.setLoop(LoopRepeat, Infinity);
-          action.play();
-        }
-      },
-      (event) => {},
-      (error) => {
-        console.error(error);
-      },
-    );
-
     // Adding camera and setting up event listeners
     scene.add(camera);
-    was
-      .on(EVENT_DETECTED, (detectedData) => {
-        for (const data of detectedData) {
-          if (model) {
-            model.visible = true;
-            model.position.set(
-              data.positionVector.x,
-              data.positionVector.y,
-              data.positionVector.z,
-            );
-            model.rotation.setFromQuaternion(
-              new Quaternion(
-                data.rotationQuaternion.x,
-                data.rotationQuaternion.y,
-                data.rotationQuaternion.z,
-                data.rotationQuaternion.w
-              )
-            );
+
+    // Loading HDR environment map
+    const hdrPromise = new Promise((resolve, reject) => {
+      const rgbeLoader = new RGBELoader();
+      rgbeLoader.load(
+        hdrSource,
+        (dataTexture, texData) => {
+          dataTexture.mapping = EquirectangularReflectionMapping;
+          scene.environment = dataTexture;
+          resolve();
+        },
+        (event) => {},
+        (error) => {
+          reject(error);
+        },
+      );
+    });
+
+    // Loading 3D model using GLTFLoader
+    const gltfPromise = new Promise((resolve, reject) => {
+      const gltfLoader = new GLTFLoader();
+      gltfLoader.load(
+        gltfSource,
+        (gltf) => {
+          model = gltf.scene;
+          model.visible = false;
+          scene.add(gltf.scene);
+
+          // Setting up animations if available
+          if (!gltf.animations.length) {
+            return resolve();
           }
-        }
-      })
-      .catch((error) => {
-        errorHandler(error);
-      });
 
-    // Handling model loss event
-    was
-      .on(EVENT_LOST, (lostData) => {
-        for (const data of lostData) {
-          if (model) {
-            model.visible = false;
+          animationMixer = new AnimationMixer(model);
+          for (const animationClip of gltf.animations) {
+            const action = animationMixer.clipAction(animationClip);
+            action.setLoop(LoopRepeat, Infinity);
+            action.play();
           }
-        }
-      })
-      .catch((error) => {
-        errorHandler(error);
-      });
+          resolve();
+        },
+        (event) => {},
+        (error) => {
+          reject(error);
+        },
+      );
+    });
 
-    // Handling pose update event
-    was
-      .on(EVENT_POSE, (poseData) => {
-        for (const data of poseData) {
-          if (model) {
-            model.position.set(
-              data.positionVector.x,
-              data.positionVector.y,
-              data.positionVector.z,
-            );
-            model.rotation.setFromQuaternion(
-              new Quaternion(
-                data.rotationQuaternion.x,
-                data.rotationQuaternion.y,
-                data.rotationQuaternion.z,
-                data.rotationQuaternion.w
-              )
-            );
+    Promise.all([hdrPromise, gltfPromise]).then(() => {
+      was
+        .on(EVENT_DETECTED, (detectedData) => {
+          for (const data of detectedData) {
+            if (model) {
+              model.visible = true;
+              model.position.set(
+                data.positionVector.x,
+                data.positionVector.y,
+                data.positionVector.z,
+              );
+              model.rotation.setFromQuaternion(
+                new Quaternion(
+                  data.rotationQuaternion.x,
+                  data.rotationQuaternion.y,
+                  data.rotationQuaternion.z,
+                  data.rotationQuaternion.w
+                )
+              );
+            }
           }
-        }
-      })
+        })
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling model loss event
+      was
+        .on(EVENT_LOST, (lostData) => {
+          for (const data of lostData) {
+            if (model) {
+              model.visible = false;
+            }
+          }
+        })
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling pose update event
+      was
+        .on(EVENT_POSE, (poseData) => {
+          for (const data of poseData) {
+            if (model) {
+              model.position.set(
+                data.positionVector.x,
+                data.positionVector.y,
+                data.positionVector.z,
+              );
+              model.rotation.setFromQuaternion(
+                new Quaternion(
+                  data.rotationQuaternion.x,
+                  data.rotationQuaternion.y,
+                  data.rotationQuaternion.z,
+                  data.rotationQuaternion.w
+                )
+              );
+            }
+          }
+        })
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling process update event
+      was
+        .on(EVENT_PROCESS, (isProcess) => {})
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling resize event
+      was
+        .on(EVENT_RESIZE, (event) => {
+          const viewportSizes = was.getViewportSizes();
+
+          renderer.setSize(container.clientWidth, container.clientHeight);
+          renderer.setViewport(
+            -(viewportSizes.width / 2 - container.clientWidth / 2),
+            -(viewportSizes.height / 2 - container.clientHeight / 2),
+            viewportSizes.width,
+            viewportSizes.height,
+          );
+
+          camera.aspect = viewportSizes.width / viewportSizes.height;
+          camera.updateProjectionMatrix();
+        })
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling orientation event
+      was
+        .on(EVENT_SCREEN_ORIENTATION, (angle) => {})
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling visibility event
+      was
+        .on(EVENT_VISIBILITY, (isVisible) => {})
+        .catch((error) => {
+          errorHandler(error);
+        });
+
+      // Handling frame update event
+      was
+        .on(EVENT_FRAME, (deltaTime) => {
+          if (animationMixer) {
+            animationMixer.update(deltaTime / 1000);
+          }
+          renderer.render(scene, camera);
+        })
+        .catch((error) => {
+          errorHandler(error);
+        });
+    })
       .catch((error) => {
         errorHandler(error);
       });
-
-    // Handling process update event
-    was
-      .on(EVENT_PROCESS, (isProcess) => {})
-      .catch((error) => {
-        errorHandler(error);
-      });
-
-    // Handling resize event
-    was
-      .on(EVENT_RESIZE, (event) => {
-        const viewportSizes = was.getViewportSizes();
-
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setViewport(
-          -(viewportSizes.width / 2 - container.clientWidth / 2),
-          -(viewportSizes.height / 2 - container.clientHeight / 2),
-          viewportSizes.width,
-          viewportSizes.height,
-        );
-
-        camera.aspect = viewportSizes.width / viewportSizes.height;
-        camera.updateProjectionMatrix();
-      })
-      .catch((error) => {
-        errorHandler(error);
-      });
-
-    // Handling orientation event
-    was
-      .on(EVENT_SCREEN_ORIENTATION, (angle) => {})
-      .catch((error) => {
-        errorHandler(error);
-      });
-
-    // Handling visibility event
-    was
-      .on(EVENT_VISIBILITY, (isVisible) => {})
-      .catch((error) => {
-        errorHandler(error);
-      });
-
-    // Handling frame update event
-    was
-      .on(EVENT_FRAME, (deltaTime) => {
-        if (animationMixer) {
-          animationMixer.update(deltaTime / 1000);
-        }
-        renderer.render(scene, camera);
-      })
-      .catch((error) => {
-        errorHandler(error);
-      });
-  })
-  .catch((error) => {
-    errorHandler(error);
-  });
+  }).catch((error) => {
+  errorHandler(error);
+})
 
 // Function to handle errors
 const errorHandler = (error) => {
@@ -294,5 +305,7 @@ const errorHandler = (error) => {
       // Handle event-related errors
       console.error(error);
       break;
+    default:
+      console.error(error);
   }
 };
