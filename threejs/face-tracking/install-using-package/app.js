@@ -28,6 +28,7 @@ import WAS, {
   TRIGGER_MODE_FACE,
   VIDEO_ERROR,
   WORKER_ERROR,
+  CAMERA_MODE_USER,
 } from '@web-ar-studio/webar-engine-sdk';
 
 // Constants for camera settings
@@ -54,6 +55,7 @@ const was = new WAS();
 const configData = {
   apiKey: import.meta.env.VITE_API_KEY, //You can modify your API key in the .env file or specify it explicitly here. P.S. you can find more info in .env file
   mode: PROJECT_MODE_FACE,
+  cameraMode : CAMERA_MODE_USER,
   container: container,
   fov: CAMERA_FOV,
   near: CAMERA_NEAR,

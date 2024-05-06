@@ -41,6 +41,7 @@ import WAS, {
   VIDEO_ERROR,
   WORKER_ERROR,
   XR_ERROR,
+  CAMERA_MODE_ENVIRONMENT,
 } from '@web-ar-studio/webar-engine-sdk';
 
 // Constants for camera settings
@@ -69,6 +70,7 @@ const was = new WAS();
 const configData = {
   apiKey: import.meta.env.VITE_API_KEY, //You can modify your API key in the .env file or specify it explicitly here. P.S. you can find more info in .env file
   mode: PROJECT_MODE_SLAM_WEBXR,
+  cameraMode : CAMERA_MODE_ENVIRONMENT,
   container: container,
   uiContainer: container,
   triggers: [{ id: 1, mode: TRIGGER_MODE_SLAM_WEBXR, source: null }],

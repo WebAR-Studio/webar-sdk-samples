@@ -28,6 +28,7 @@ import WAS, {
   TRIGGER_MODE_IMAGE,
   VIDEO_ERROR,
   WORKER_ERROR,
+  CAMERA_MODE_ENVIRONMENT,
 } from '@web-ar-studio/webar-engine-sdk';
 
 // Constants for camera settings
@@ -55,6 +56,7 @@ const was = new WAS();
 const configData = {
   apiKey: import.meta.env.VITE_API_KEY, //You can modify your API key in the .env file or specify it explicitly here. P.S. you can find more info in .env file
   mode: PROJECT_MODE_IMAGE,
+  cameraMode : CAMERA_MODE_ENVIRONMENT,
   container: container,
   fov: CAMERA_FOV,
   triggers: [{ id: 1, mode: TRIGGER_MODE_IMAGE, source: triggerSource }],

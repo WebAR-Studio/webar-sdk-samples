@@ -40,6 +40,7 @@ import WAS, {
   VIDEO_ERROR,
   WORKER_ERROR,
   XR_ERROR,
+  CAMERA_MODE_ENVIRONMENT,
 } from '@web-ar-studio/webar-engine-sdk';
 
 // Constants for camera settings
@@ -71,6 +72,7 @@ const was = new WAS();
 const configData = {
   apiKey: '52f80541de1715ba47f43522d648d0800c6e514d8b5e91b9b6e13ef9e1348cb8',
   mode: PROJECT_MODE_SLAM_WEBXR,
+  cameraMode : CAMERA_MODE_ENVIRONMENT,
   container: container,
   uiContainer: container,
   triggers: [{ id: 1, mode: TRIGGER_MODE_SLAM_WEBXR, source: null }],
