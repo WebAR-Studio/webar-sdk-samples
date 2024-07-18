@@ -342,6 +342,7 @@ was
               XRViewerPose.scaleVector.z
             );
             camera.projectionMatrix.fromArray(XRViewerPose.projectionMatrix);
+            camera.updateProjectionMatrix();
           }
         })
         .catch((error) => {
